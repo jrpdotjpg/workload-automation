@@ -878,6 +878,11 @@ class AndroidRuntimeConfig(RuntimeConfig):
         if value is not None:
             obj.config['screen_on'] = value
 
+    @staticmethod
+    def set_stay_on_mode(obj, value):
+        if value is not None:
+            obj.config['stay_on'] = value
+
     def __init__(self, target):
         self.config = defaultdict(dict)
         super(AndroidRuntimeConfig, self).__init__(target)
@@ -930,6 +935,19 @@ class AndroidRuntimeConfig(RuntimeConfig):
                     Specify whether the device screen should be on
                     """)
 
+            param_name = 'stay_on'
+            self._runtime_params[param_name] = \
+                RuntimeParameter(
+                    param_name, kind=int,
+                    constraint=lambda x: 0 <= x <= 7,
+                    default=0,
+                    setter=self.set_stay_on_mode,
+                    description="""
+                    Specify whether the screen should stay on while
+                    the device is charging
+                    """
+                )
+
     def check_target(self):
         if self.target.os != 'android' and self.target.os != 'chromeos':
             raise ConfigError('Target does not appear to be running Android')
@@ -971,6 +989,8 @@ class AndroidRuntimeConfig(RuntimeConfig):
                 self.target.ensure_screen_is_on()
             else:
                 self.target.ensure_screen_is_off()
+        if 'stay_on' in self.config:
+            self.target.set_stay_on_mode(self.config['stay_on'])
 
     def clear(self):
         self.config = {}
